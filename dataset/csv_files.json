@@ -1,0 +1,19 @@
+{
+	"name": "csv_files",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "Datalake_raspberry",
+			"type": "LinkedServiceReference"
+		},
+		"annotations": [],
+		"type": "Binary",
+		"typeProperties": {
+			"location": {
+				"type": "AzureBlobFSLocation",
+				"folderPath": "adfdemo1",
+				"fileSystem": "covid19adf"
+			}
+		}
+	},
+	"type": "Microsoft.DataFactory/factories/datasets"
+}

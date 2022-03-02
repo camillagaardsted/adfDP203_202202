@@ -1,0 +1,20 @@
+{
+	"name": "powerquery1",
+	"properties": {
+		"type": "WranglingDataFlow",
+		"typeProperties": {
+			"sources": [
+				{
+					"name": "raspberry_csv_files",
+					"script": "source(allowSchemaDrift: true,\n\tvalidateSchema: false,\n\tignoreNoFilesFound: false) ~> raspberry_csv_files",
+					"dataset": {
+						"referenceName": "raspberry_csv_files",
+						"type": "DatasetReference"
+					}
+				}
+			],
+			"script": "section Section1;\r\nshared raspberry_csv_files = let\r\n  AdfDoc = AzureStorage.DataLakeContents(\"https://datalake20220228.dfs.core.windows.net/raspberrydata/data2022_02_28_11_11_23.csv\"),\r\n  Csv = Csv.Document(AdfDoc, [Delimiter = \",\", Encoding = TextEncoding.Utf8, QuoteStyle = QuoteStyle.Csv]),\r\n  PromotedHeaders = Table.PromoteHeaders(Csv, [PromoteAllScalars = true])\r\nin\r\n  PromotedHeaders;\r\nshared UserQuery = let\r\n  Source = raspberry_csv_files,\r\n  #\"Filtered rows\" = Table.SelectRows(Source, each [temperature_from_pressure] <> \"0\"),\r\n  #\"Changed column type\" = Table.TransformColumnTypes(#\"Filtered rows\", {{\"sensorid\", Int64.Type}, {\"temperature_from_humidity\", type number}, {\"temperature_from_pressure\", type number}, {\"humidity\", type number}, {\"pressure\", type number}}),\r\n  #\"Replaced value\" = Table.ReplaceValue(#\"Changed column type\", \"T\", \" \", Replacer.ReplaceText, {\"timestamp\"})\r\nin\r\n  #\"Replaced value\";\r\n",
+			"documentLocale": "en-us"
+		}
+	}
+}

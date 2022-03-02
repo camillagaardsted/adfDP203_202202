@@ -1,0 +1,19 @@
+{
+	"name": "raspdata_som_json",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "Datalake_raspberry",
+			"type": "LinkedServiceReference"
+		},
+		"annotations": [],
+		"type": "Json",
+		"typeProperties": {
+			"location": {
+				"type": "AzureBlobFSLocation",
+				"fileSystem": "raspdatajson"
+			}
+		},
+		"schema": {}
+	},
+	"type": "Microsoft.DataFactory/factories/datasets"
+}
