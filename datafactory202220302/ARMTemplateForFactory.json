@@ -11,6 +11,10 @@
 			"type": "secureString",
 			"metadata": "Secure string for 'connectionString' of 'AzureBlobStorage1'"
 		},
+		"SynapseAnalytics_connectionString": {
+			"type": "secureString",
+			"metadata": "Secure string for 'connectionString' of 'SynapseAnalytics'"
+		},
 		"Datalake_raspberry_properties_typeProperties_url": {
 			"type": "string",
 			"defaultValue": "https://datalake20220228.dfs.core.windows.net"
@@ -60,7 +64,13 @@
 									"sink1": {}
 								}
 							},
-							"staging": {},
+							"staging": {
+								"linkedService": {
+									"referenceName": "Datalake_raspberry",
+									"type": "LinkedServiceReference"
+								},
+								"folderPath": "raspdatajson/stag"
+							},
 							"compute": {
 								"coreCount": 8,
 								"computeType": "General"
@@ -76,7 +86,8 @@
 				"annotations": []
 			},
 			"dependsOn": [
-				"[concat(variables('factoryId'), '/dataflows/dataflow1')]"
+				"[concat(variables('factoryId'), '/dataflows/dataflow1')]",
+				"[concat(variables('factoryId'), '/linkedServices/Datalake_raspberry')]"
 			]
 		},
 		{
@@ -107,7 +118,13 @@
 									"sink1": {}
 								}
 							},
-							"staging": {},
+							"staging": {
+								"linkedService": {
+									"referenceName": "Datalake_raspberry",
+									"type": "LinkedServiceReference"
+								},
+								"folderPath": "raspdatajson"
+							},
 							"compute": {
 								"coreCount": 8,
 								"computeType": "General"
@@ -124,7 +141,8 @@
 				"lastPublishTime": "2022-03-02T12:47:00Z"
 			},
 			"dependsOn": [
-				"[concat(variables('factoryId'), '/dataflows/dataflow1')]"
+				"[concat(variables('factoryId'), '/dataflows/dataflow1')]",
+				"[concat(variables('factoryId'), '/linkedServices/Datalake_raspberry')]"
 			]
 		},
 		{
@@ -455,53 +473,6 @@
 				"annotations": []
 			},
 			"dependsOn": []
-		},
-		{
-			"name": "[concat(parameters('factoryName'), '/pipeline3')]",
-			"type": "Microsoft.DataFactory/factories/pipelines",
-			"apiVersion": "2018-06-01",
-			"properties": {
-				"activities": [
-					{
-						"name": "Data flow1",
-						"type": "ExecuteDataFlow",
-						"dependsOn": [],
-						"policy": {
-							"timeout": "1.00:00:00",
-							"retry": 0,
-							"retryIntervalInSeconds": 30,
-							"secureOutput": false,
-							"secureInput": false
-						},
-						"userProperties": [],
-						"typeProperties": {
-							"dataflow": {
-								"referenceName": "dataflow1",
-								"type": "DataFlowReference",
-								"parameters": {},
-								"datasetParameters": {
-									"source1": {},
-									"sink1": {}
-								}
-							},
-							"staging": {},
-							"compute": {
-								"coreCount": 8,
-								"computeType": "General"
-							},
-							"traceLevel": "Fine"
-						}
-					}
-				],
-				"policy": {
-					"elapsedTimeMetric": {},
-					"cancelAfter": {}
-				},
-				"annotations": []
-			},
-			"dependsOn": [
-				"[concat(variables('factoryId'), '/dataflows/dataflow1')]"
-			]
 		},
 		{
 			"name": "[concat(parameters('factoryName'), '/ssi pipeline')]",
@@ -1033,19 +1004,53 @@
 					"sinks": [
 						{
 							"dataset": {
-								"referenceName": "raspdata_som_json",
+								"referenceName": "AzureSynapseAnalyticsTable1",
 								"type": "DatasetReference"
 							},
 							"name": "sink1"
 						}
 					],
 					"transformations": [],
-					"script": "source(output(\n\t\tsensorid as string,\n\t\ttimestamp as string,\n\t\ttemperature_from_humidity as string,\n\t\ttemperature_from_pressure as string,\n\t\thumidity as string,\n\t\tpressure as string\n\t),\n\tallowSchemaDrift: true,\n\tvalidateSchema: false,\n\tignoreNoFilesFound: false) ~> source1\nsource1 sink(allowSchemaDrift: true,\n\tvalidateSchema: false,\n\tumask: 0022,\n\tpreCommands: [],\n\tpostCommands: [],\n\tskipDuplicateMapInputs: true,\n\tskipDuplicateMapOutputs: true) ~> sink1"
+					"script": "source(output(\n\t\tsensorid as integer,\n\t\ttimestamp as timestamp 'yyyy-MM-dd\\'T\\'HH:mm:ss',\n\t\ttemperature_from_humidity as double,\n\t\ttemperature_from_pressure as double,\n\t\thumidity as double,\n\t\tpressure as double\n\t),\n\tallowSchemaDrift: true,\n\tvalidateSchema: false,\n\tignoreNoFilesFound: false) ~> source1\nsource1 sink(allowSchemaDrift: true,\n\tvalidateSchema: false,\n\tdeletable:false,\n\tinsertable:true,\n\tupdateable:false,\n\tupsertable:false,\n\tformat: 'table',\n\tstaged: true,\n\tallowCopyCommand: true,\n\tskipDuplicateMapInputs: true,\n\tskipDuplicateMapOutputs: true,\n\terrorHandlingOption: 'stopOnFirstError') ~> sink1"
 				}
 			},
 			"dependsOn": [
 				"[concat(variables('factoryId'), '/datasets/raspberry_csv_files')]",
-				"[concat(variables('factoryId'), '/datasets/raspdata_som_json')]"
+				"[concat(variables('factoryId'), '/datasets/AzureSynapseAnalyticsTable1')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/SynapseAnalytics')]",
+			"type": "Microsoft.DataFactory/factories/linkedServices",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"annotations": [],
+				"type": "AzureSqlDW",
+				"typeProperties": {
+					"connectionString": "[parameters('SynapseAnalytics_connectionString')]"
+				}
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/AzureSynapseAnalyticsTable1')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "SynapseAnalytics",
+					"type": "LinkedServiceReference"
+				},
+				"annotations": [],
+				"type": "AzureSqlDWTable",
+				"schema": [],
+				"typeProperties": {
+					"schema": "dbo",
+					"table": "RaspDataFromAdf"
+				}
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/SynapseAnalytics')]"
 			]
 		}
 	]

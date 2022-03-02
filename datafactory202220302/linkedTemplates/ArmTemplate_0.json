@@ -11,6 +11,10 @@
 			"type": "secureString",
 			"metadata": "Secure string for 'connectionString' of 'AzureBlobStorage1'"
 		},
+		"SynapseAnalytics_connectionString": {
+			"type": "secureString",
+			"metadata": "Secure string for 'connectionString' of 'SynapseAnalytics'"
+		},
 		"Datalake_raspberry_properties_typeProperties_url": {
 			"type": "string",
 			"defaultValue": "https://datalake20220228.dfs.core.windows.net"
@@ -159,6 +163,19 @@
 					"url": "[parameters('SSI_http_properties_typeProperties_url')]",
 					"enableServerCertificateValidation": true,
 					"authenticationType": "Anonymous"
+				}
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/SynapseAnalytics')]",
+			"type": "Microsoft.DataFactory/factories/linkedServices",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"annotations": [],
+				"type": "AzureSqlDW",
+				"typeProperties": {
+					"connectionString": "[parameters('SynapseAnalytics_connectionString')]"
 				}
 			},
 			"dependsOn": []
@@ -367,6 +384,27 @@
 			},
 			"dependsOn": [
 				"[concat(variables('factoryId'), '/linkedServices/SSI_http')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/AzureSynapseAnalyticsTable1')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "SynapseAnalytics",
+					"type": "LinkedServiceReference"
+				},
+				"annotations": [],
+				"type": "AzureSqlDWTable",
+				"schema": [],
+				"typeProperties": {
+					"schema": "dbo",
+					"table": "RaspDataFromAdf"
+				}
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/SynapseAnalytics')]"
 			]
 		},
 		{
@@ -769,87 +807,6 @@
 			},
 			"dependsOn": [
 				"[concat(variables('factoryId'), '/datasets/raspberry_csv_files')]"
-			]
-		},
-		{
-			"name": "[concat(parameters('factoryName'), '/dataflow1')]",
-			"type": "Microsoft.DataFactory/factories/dataflows",
-			"apiVersion": "2018-06-01",
-			"properties": {
-				"type": "MappingDataFlow",
-				"typeProperties": {
-					"sources": [
-						{
-							"dataset": {
-								"referenceName": "raspberry_csv_files",
-								"type": "DatasetReference"
-							},
-							"name": "source1"
-						}
-					],
-					"sinks": [
-						{
-							"dataset": {
-								"referenceName": "raspdata_som_json",
-								"type": "DatasetReference"
-							},
-							"name": "sink1"
-						}
-					],
-					"transformations": [],
-					"script": "source(output(\n\t\tsensorid as string,\n\t\ttimestamp as string,\n\t\ttemperature_from_humidity as string,\n\t\ttemperature_from_pressure as string,\n\t\thumidity as string,\n\t\tpressure as string\n\t),\n\tallowSchemaDrift: true,\n\tvalidateSchema: false,\n\tignoreNoFilesFound: false) ~> source1\nsource1 sink(allowSchemaDrift: true,\n\tvalidateSchema: false,\n\tumask: 0022,\n\tpreCommands: [],\n\tpostCommands: [],\n\tskipDuplicateMapInputs: true,\n\tskipDuplicateMapOutputs: true) ~> sink1"
-				}
-			},
-			"dependsOn": [
-				"[concat(variables('factoryId'), '/datasets/raspberry_csv_files')]",
-				"[concat(variables('factoryId'), '/datasets/raspdata_som_json')]"
-			]
-		},
-		{
-			"name": "[concat(parameters('factoryName'), '/Dataflow')]",
-			"type": "Microsoft.DataFactory/factories/pipelines",
-			"apiVersion": "2018-06-01",
-			"properties": {
-				"activities": [
-					{
-						"name": "Data flow1",
-						"type": "ExecuteDataFlow",
-						"dependsOn": [],
-						"policy": {
-							"timeout": "1.00:00:00",
-							"retry": 0,
-							"retryIntervalInSeconds": 30,
-							"secureOutput": false,
-							"secureInput": false
-						},
-						"userProperties": [],
-						"typeProperties": {
-							"dataflow": {
-								"referenceName": "dataflow1",
-								"type": "DataFlowReference",
-								"parameters": {},
-								"datasetParameters": {
-									"source1": {},
-									"sink1": {}
-								}
-							},
-							"staging": {},
-							"compute": {
-								"coreCount": 8,
-								"computeType": "General"
-							},
-							"traceLevel": "Fine"
-						}
-					}
-				],
-				"policy": {
-					"elapsedTimeMetric": {},
-					"cancelAfter": {}
-				},
-				"annotations": []
-			},
-			"dependsOn": [
-				"[concat(variables('factoryId'), '/dataflows/dataflow1')]"
 			]
 		}
 	]
