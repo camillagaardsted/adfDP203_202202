@@ -1,5 +1,5 @@
 {
-	"name": "Daily at 1530",
+	"name": "Daily at 1515",
 	"properties": {
 		"annotations": [],
 		"runtimeState": "Started",
@@ -20,7 +20,7 @@
 				"timeZone": "Romance Standard Time",
 				"schedule": {
 					"minutes": [
-						30
+						15
 					],
 					"hours": [
 						15
