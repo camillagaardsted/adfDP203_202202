@@ -22,7 +22,7 @@
 				}
 			],
 			"transformations": [],
-			"script": "source(output(\n\t\tsensorid as string,\n\t\ttimestamp as string,\n\t\ttemperature_from_humidity as string,\n\t\ttemperature_from_pressure as string,\n\t\thumidity as string,\n\t\tpressure as string\n\t),\n\tallowSchemaDrift: true,\n\tvalidateSchema: false,\n\tignoreNoFilesFound: false) ~> source1\nsource1 sink(allowSchemaDrift: true,\n\tvalidateSchema: false,\n\tumask: 0022,\n\tpreCommands: [],\n\tpostCommands: [],\n\tskipDuplicateMapInputs: true,\n\tskipDuplicateMapOutputs: true) ~> sink1"
+			"script": "source(output(\n\t\tsensorid as integer,\n\t\ttimestamp as timestamp 'yyyy-MM-dd\\'T\\'HH:mm:ss',\n\t\ttemperature_from_humidity as double,\n\t\ttemperature_from_pressure as double,\n\t\thumidity as double,\n\t\tpressure as double\n\t),\n\tallowSchemaDrift: true,\n\tvalidateSchema: false,\n\tignoreNoFilesFound: false) ~> source1\nsource1 sink(allowSchemaDrift: true,\n\tvalidateSchema: false,\n\tumask: 0022,\n\tpreCommands: [],\n\tpostCommands: [],\n\tskipDuplicateMapInputs: true,\n\tskipDuplicateMapOutputs: true) ~> sink1"
 		}
 	}
 }
