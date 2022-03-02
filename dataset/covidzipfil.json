@@ -1,0 +1,21 @@
+{
+	"name": "covidzipfil",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "SSI website",
+			"type": "LinkedServiceReference"
+		},
+		"annotations": [],
+		"type": "Binary",
+		"typeProperties": {
+			"location": {
+				"type": "HttpServerLocation",
+				"relativeUrl": "overvaagningsdata-covid19-25012022-f7tr"
+			},
+			"compression": {
+				"type": "ZipDeflate"
+			}
+		}
+	},
+	"type": "Microsoft.DataFactory/factories/datasets"
+}

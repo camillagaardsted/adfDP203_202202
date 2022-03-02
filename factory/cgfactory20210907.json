@@ -1,0 +1,9 @@
+{
+	"name": "cgfactory20210907",
+	"location": "westeurope",
+	"identity": {
+		"type": "SystemAssigned",
+		"principalId": "4a8da202-d357-4e4e-9ded-a724426c6b17",
+		"tenantId": "4d3154ee-edce-4862-82db-ec6bf5499ba1"
+	}
+}
