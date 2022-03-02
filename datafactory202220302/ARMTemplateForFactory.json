@@ -646,6 +646,27 @@
 			]
 		},
 		{
+			"name": "[concat(parameters('factoryName'), '/AzureSynapseAnalyticsTable1')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "SynapseAnalytics",
+					"type": "LinkedServiceReference"
+				},
+				"annotations": [],
+				"type": "AzureSqlDWTable",
+				"schema": [],
+				"typeProperties": {
+					"schema": "dbo",
+					"table": "RaspDataFromAdf"
+				}
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/SynapseAnalytics')]"
+			]
+		},
+		{
 			"name": "[concat(parameters('factoryName'), '/covid19zipfile')]",
 			"type": "Microsoft.DataFactory/factories/datasets",
 			"apiVersion": "2018-06-01",
@@ -923,6 +944,19 @@
 			"dependsOn": []
 		},
 		{
+			"name": "[concat(parameters('factoryName'), '/SynapseAnalytics')]",
+			"type": "Microsoft.DataFactory/factories/linkedServices",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"annotations": [],
+				"type": "AzureSqlDW",
+				"typeProperties": {
+					"connectionString": "[parameters('SynapseAnalytics_connectionString')]"
+				}
+			},
+			"dependsOn": []
+		},
+		{
 			"name": "[concat(parameters('factoryName'), '/Daily at 1515')]",
 			"type": "Microsoft.DataFactory/factories/triggers",
 			"apiVersion": "2018-06-01",
@@ -961,31 +995,6 @@
 			]
 		},
 		{
-			"name": "[concat(parameters('factoryName'), '/powerquery1')]",
-			"type": "Microsoft.DataFactory/factories/dataflows",
-			"apiVersion": "2018-06-01",
-			"properties": {
-				"type": "WranglingDataFlow",
-				"typeProperties": {
-					"sources": [
-						{
-							"name": "raspberry_csv_files",
-							"script": "source(allowSchemaDrift: true,\n\tvalidateSchema: false,\n\tignoreNoFilesFound: false) ~> raspberry_csv_files",
-							"dataset": {
-								"referenceName": "raspberry_csv_files",
-								"type": "DatasetReference"
-							}
-						}
-					],
-					"script": "section Section1;\r\nshared raspberry_csv_files = let\r\n  AdfDoc = AzureStorage.DataLakeContents(\"https://datalake20220228.dfs.core.windows.net/raspberrydata/data2022_02_28_11_11_23.csv\"),\r\n  Csv = Csv.Document(AdfDoc, [Delimiter = \",\", Encoding = TextEncoding.Utf8, QuoteStyle = QuoteStyle.Csv]),\r\n  PromotedHeaders = Table.PromoteHeaders(Csv, [PromoteAllScalars = true])\r\nin\r\n  PromotedHeaders;\r\nshared UserQuery = let\r\n  Source = raspberry_csv_files,\r\n  #\"Filtered rows\" = Table.SelectRows(Source, each [temperature_from_pressure] <> \"0\"),\r\n  #\"Changed column type\" = Table.TransformColumnTypes(#\"Filtered rows\", {{\"sensorid\", Int64.Type}, {\"temperature_from_humidity\", type number}, {\"temperature_from_pressure\", type number}, {\"humidity\", type number}, {\"pressure\", type number}}),\r\n  #\"Replaced value\" = Table.ReplaceValue(#\"Changed column type\", \"T\", \" \", Replacer.ReplaceText, {\"timestamp\"})\r\nin\r\n  #\"Replaced value\";\r\n",
-					"documentLocale": "en-us"
-				}
-			},
-			"dependsOn": [
-				"[concat(variables('factoryId'), '/datasets/raspberry_csv_files')]"
-			]
-		},
-		{
 			"name": "[concat(parameters('factoryName'), '/dataflow1')]",
 			"type": "Microsoft.DataFactory/factories/dataflows",
 			"apiVersion": "2018-06-01",
@@ -1020,37 +1029,28 @@
 			]
 		},
 		{
-			"name": "[concat(parameters('factoryName'), '/SynapseAnalytics')]",
-			"type": "Microsoft.DataFactory/factories/linkedServices",
+			"name": "[concat(parameters('factoryName'), '/powerquery1')]",
+			"type": "Microsoft.DataFactory/factories/dataflows",
 			"apiVersion": "2018-06-01",
 			"properties": {
-				"annotations": [],
-				"type": "AzureSqlDW",
+				"type": "WranglingDataFlow",
 				"typeProperties": {
-					"connectionString": "[parameters('SynapseAnalytics_connectionString')]"
-				}
-			},
-			"dependsOn": []
-		},
-		{
-			"name": "[concat(parameters('factoryName'), '/AzureSynapseAnalyticsTable1')]",
-			"type": "Microsoft.DataFactory/factories/datasets",
-			"apiVersion": "2018-06-01",
-			"properties": {
-				"linkedServiceName": {
-					"referenceName": "SynapseAnalytics",
-					"type": "LinkedServiceReference"
-				},
-				"annotations": [],
-				"type": "AzureSqlDWTable",
-				"schema": [],
-				"typeProperties": {
-					"schema": "dbo",
-					"table": "RaspDataFromAdf"
+					"sources": [
+						{
+							"name": "raspberry_csv_files",
+							"script": "source(allowSchemaDrift: true,\n\tvalidateSchema: false,\n\tignoreNoFilesFound: false) ~> raspberry_csv_files",
+							"dataset": {
+								"referenceName": "raspberry_csv_files",
+								"type": "DatasetReference"
+							}
+						}
+					],
+					"script": "section Section1;\r\nshared raspberry_csv_files = let\r\n  AdfDoc = AzureStorage.DataLakeContents(\"https://datalake20220228.dfs.core.windows.net/raspberrydata/data2022_02_28_11_11_23.csv\"),\r\n  Csv = Csv.Document(AdfDoc, [Delimiter = \",\", Encoding = TextEncoding.Utf8, QuoteStyle = QuoteStyle.Csv]),\r\n  PromotedHeaders = Table.PromoteHeaders(Csv, [PromoteAllScalars = true])\r\nin\r\n  PromotedHeaders;\r\nshared UserQuery = let\r\n  Source = raspberry_csv_files,\r\n  #\"Filtered rows\" = Table.SelectRows(Source, each [temperature_from_pressure] <> \"0\"),\r\n  #\"Changed column type\" = Table.TransformColumnTypes(#\"Filtered rows\", {{\"sensorid\", Int64.Type}, {\"temperature_from_humidity\", type number}, {\"temperature_from_pressure\", type number}, {\"humidity\", type number}, {\"pressure\", type number}}),\r\n  #\"Replaced value\" = Table.ReplaceValue(#\"Changed column type\", \"T\", \" \", Replacer.ReplaceText, {\"timestamp\"})\r\nin\r\n  #\"Replaced value\";\r\n",
+					"documentLocale": "en-us"
 				}
 			},
 			"dependsOn": [
-				"[concat(variables('factoryId'), '/linkedServices/SynapseAnalytics')]"
+				"[concat(variables('factoryId'), '/datasets/raspberry_csv_files')]"
 			]
 		}
 	]
