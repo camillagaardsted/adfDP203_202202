@@ -24,7 +24,7 @@
 							"referenceName": "Datalake_raspberry",
 							"type": "LinkedServiceReference"
 						},
-						"folderPath": "raspdatajson"
+						"folderPath": "raspdatajson/stag"
 					},
 					"compute": {
 						"coreCount": 8,
