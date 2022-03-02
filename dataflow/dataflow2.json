@@ -5,19 +5,11 @@
 		"typeProperties": {
 			"sources": [
 				{
-					"dataset": {
-						"referenceName": "positive_over_tid_fil",
-						"type": "DatasetReference"
-					},
 					"name": "source1"
 				}
 			],
 			"sinks": [
 				{
-					"dataset": {
-						"referenceName": "Json1",
-						"type": "DatasetReference"
-					},
 					"name": "sink1"
 				}
 			],
@@ -29,7 +21,7 @@
 					"name": "DerivedColumn1"
 				}
 			],
-			"script": "source(output(\n\t\tDate as string,\n\t\tNewPositive as string,\n\t\tNotPrevPos as string,\n\t\tPosPct as string,\n\t\tPrevPos as string,\n\t\tTested as string,\n\t\tTested_kumulativ as string\n\t),\n\tallowSchemaDrift: true,\n\tvalidateSchema: false,\n\tignoreNoFilesFound: false) ~> source1\nsource1 filter(like(Date,'%-%') && like(NewPositive,'%.%')) ~> Filter1\nFilter1 derive(column2 = toInteger('1.019','#.###','de'),\n\t\tcolumn3 = toInteger(trim(PrevPos),'#.###','da-DK'),\n\t\tcolumn4 = equals(trim(NewPositive),'1.019')) ~> DerivedColumn1\nDerivedColumn1 sink(allowSchemaDrift: true,\n\tvalidateSchema: false,\n\tskipDuplicateMapInputs: true,\n\tskipDuplicateMapOutputs: true) ~> sink1"
+			"script": "source(output(\n\t\tDate as string,\n\t\tNewPositive as string,\n\t\tNotPrevPos as string,\n\t\tPosPct as string,\n\t\tPrevPos as string,\n\t\tTested as string,\n\t\tTested_kumulativ as string\n\t),\n\tallowSchemaDrift: true,\n\tvalidateSchema: false) ~> source1\nsource1 filter(like(Date,'%-%') && like(NewPositive,'%.%')) ~> Filter1\nFilter1 derive(column2 = toInteger('1.019','#.###','de'),\n\t\tcolumn3 = toInteger(trim(PrevPos),'#.###','da-DK'),\n\t\tcolumn4 = equals(trim(NewPositive),'1.019')) ~> DerivedColumn1\nDerivedColumn1 sink(allowSchemaDrift: true,\n\tvalidateSchema: false,\n\tskipDuplicateMapInputs: true,\n\tskipDuplicateMapOutputs: true) ~> sink1"
 		}
 	}
 }
