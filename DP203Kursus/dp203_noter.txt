@@ -1,0 +1,209 @@
+
+
+-- Azure Storage account
+-- vi skal anvende den til filer
+
+-- Tilbyder 4 typer 
+	-- Fileshare   (filer)
+	-- Blobstorage    (filer)
+	-- Queue storage  (events som skal processeres i rækkefølge)
+	-- Table storage  (NoSQL ligesom CosmosDB)	 
+
+-- https://www.azurespeed.com/Azure/Latency
+
+-- Access tier
+-- Cool/hot - vælg hvad default skal være
+-- ved upload af fil kan vi selv vælge
+-- archive er en 3. mulighed (I kan ikke sætte den som default)
+-- og det meget laaaang tid at hente archive
+
+
+-- Vi kan deploye via
+	-- Azure portal og gui (portal.azure.com)
+	-- via powershell og en ARM template (azure resource manager)
+	-- Vi kan anvende AzureCLI  - AzCLI direkte i browser shell portal (shell.azure.com)
+	-- eller AzCLI som et program I downloader lokalt
+
+
+
+--https://docs.microsoft.com/en-us/azure/azure-resource-manager/templates/deploy-powershell
+
+-- covid19 DK data fra ssi:
+--https://covid19.ssi.dk/overvagningsdata/download-fil-med-overvaagningdata
+
+-- Azure Data Explorer
+--https://azure.microsoft.com/da-dk/features/storage-explorer/
+
+-- Security _ Adgang til data:
+	-- Vi har 2 nøgler til en Storage account (ikke best practise at anvende dem)
+	-- Best practise er at avende Azure AD
+	-- SAS - Shared Access Signature - vi kan udstede til en specifik folder/container og f.eks. kun med læse rettighed
+
+-- eksempel på en SAS nøgle:
+-- ?sv=2020-10-02&st=2022-02-28T09%3A06%3A03Z&se=2030-03-01T09%3A06%3A00Z&sr=c&sp=rl&sig=9avC4yKuNE1ofJzWECWtBk1WrXmWe5AS5XR8BXTqgtE%3D
+-- husk at fjerne det første spørgsmålstegn
+-- til raspdata container
+-- ?sv=2020-10-02&st=2022-02-28T13%3A55%3A12Z&se=2022-03-01T13%3A55%3A12Z&sr=c&sp=rwl&sig=3rOffJEO7HyOCHmJoScNmgVW7mUTG4ZqsG7EAXV4ncc%3D
+
+
+SELECT		*
+FROM		sys.credentials
+
+BACKUP DATABASE [AdventureWorks2017] 
+TO  URL = N'https://std20220228.blob.core.windows.net/sqldatabackup/adventureworks2017_backup_2022_02_28_102736.bak' 
+WITH NOFORMAT, NOINIT,  NAME = N'AdventureWorks2017-Full Database Backup',
+NOSKIP, NOREWIND, NOUNLOAD,  STATS = 10
+GO
+
+-- vi kan lave databaser som har datafil og logfil i skyen i en storage container i Azure
+-- kan endda fungere med snapshot backup - som er supersmart
+CREATE DATABASE [DBISkyen]
+ CONTAINMENT = NONE
+ ON  PRIMARY 
+( NAME = N'DBISkyen', FILENAME = N'https://std20220228.blob.core.windows.net/sqldatabackup/DBISkyen.mdf' , SIZE = 8192KB , FILEGROWTH = 65536KB )
+ LOG ON 
+( NAME = N'DBISkyen_log', FILENAME = N'https://std20220228.blob.core.windows.net/sqldatabackup/DBISkyen_log.ldf' , SIZE = 8192KB , FILEGROWTH = 65536KB )
+GO
+
+USE dbiskyen
+
+-- storage account
+-- værktøjer til at få filer uploadet
+--Azure Storage Explorer
+-- Azcopy (cmd line værktøj)
+-- via RESTAPI fra applikation
+
+
+-- GoDeploy 
+-- portal til at køre scripts og klargøre miljø til øvelser/labs
+-- snabel-a CTRL-ALT-2
+
+
+-- Password: SuperUsers8541!!
+
+-- Vi følger lab guide direkte fra Github her 
+-- https://github.com/MicrosoftLearning/DP-203-Data-Engineer/blob/master/Instructions/Labs/LAB_00_lab_setup_instructions.md
+
+
+-- Azure AD
+-- vi har oprettet brugere og grupper i AD
+-- sikkerhed - vi tildeler rollebaserede rettigheder
+-- f.eks. "Storage Blob Data Reader" på en specifik container
+
+
+---------------------------------------------------------------------
+-- Azure Databricks
+---------------------------------------------------------------------
+-- Spark cluster
+-- Databricks - namespace
+-- vi kan oprette et eller flere clusters i Databricks
+
+-- premium Databricks understøtter rollebaseret adgang for brugere
+-- standard -alle er admin og har samme rettigheder
+
+--Frokost til 12.55
+
+
+-- Databricks
+-- vi opretter notebooks
+-- vi kan skrive Spark SQL, python, scala
+-- vi arbejder med data i dataframes :pyspark.sql.dataframe.DataFrame
+--  se https://spark.apache.org/docs/latest/
+
+
+-- Dataframe se https://spark.apache.org/docs/latest/api/python/reference/api/pyspark.sql.DataFrame.html?highlight=dataframe#pyspark.sql.DataFrame
+
+-- https://<databricks-instance>#secrets/createScope
+
+
+----------------------------------------------------------------------------------
+-- Databricks
+----------------------------------------------------------------------------------
+
+-- Lake House
+-- MPP - massive parallel processing
+
+-- vi kan have eksterne tabeller som peger direkte ud til vores filer
+
+-- Mounting blob storage
+-- https://docs.databricks.com/data/data-sources/azure/azure-storage.html
+
+
+----------------------------------------------------------------------------------
+-- Synapse Analytics
+----------------------------------------------------------------------------------
+
+-- Der er tre muligheder
+-- 1) Serverless pool (modul 2)
+
+-- Hvor kan vi arbejde med Synapse?
+-- SSMS
+-- Synapse Studio (i browser)
+-- Azure Data Studio (desktop program)
+
+-- external tables, hvor vi peger på blob/datalake - det er polybase 
+
+-- nu er vi otto
+SELECT SUSER_NAME()
+
+SELECT		*
+FROM		ext.RaspDataExternalTable
+
+-- nærstuder de trin man gennemgår, når man opretter database scoped credential
+ --dvs:
+ -- master key
+ -- database scoped credential
+ -- datasource
+ -- fileformat
+ -- create external table
+
+-------------------------------------------
+
+-- Spark pool i Synapse (modul 4)
+
+-- total lækker editor https://code.visualstudio.com/
+
+
+https://docs.microsoft.com/en-us/azure/synapse-analytics/spark/synapse-spark-sql-pool-import-export#:~:text=The%20Synapse%20Dedicated%20SQL%20Pool,in%20parallel%20and%20at%20scale.
+
+-- Vi vil have data fra Spark pool og ind i dedicated pool
+-- se https://docs.microsoft.com/en-us/azure/synapse-analytics/spark/synapse-spark-sql-pool-import-export
+
+-- Dedicated SQL Pool connector for Apache Spark
+-- fungerer til import og eksport af data fra spark til synapse dedicated pool
+-- findes KUN til SCALA - dvs workaround omkring scala for at anvende den i python
+
+-- import til Spark fra tabel i Synapse
+val dfMatador = spark.read.synapsesql("SQLPool01.dbo.MatadarBoern")
+
+
+-- python workaround
+-- send det fra Scala til Spark sql database
+-- indlæs dernæst derfra til python
+
+
+-- fra spark scala til dedicated pool
+--%%spark
+--df.write.synapsesql("SQLPool01.dbo.MatadarBoern", Constants.INTERNAL)
+
+--CETAS -- Create External Table As Select
+-- Det handler om EXPORT af data fra synapse og til filer OG vi får en external table ud af det
+
+CREATE EXTERNAL TABLE RaspAggDataAllDays
+WITH (
+    LOCATION = 'raspdataaggalldays/',
+    DATA_SOURCE = raspberrydata_datalake20220228_dfs_core_windows_net,  
+    FILE_FORMAT = SynapseDelimitedTextFormat
+)  
+AS
+SELECT     CAST(timestamp AS DATE)      AS Dato
+            , MAX(pressure)             AS MaxPressure
+            , MIN(pressure)             AS MinPressure
+            , MAX(temperature_from_humidity)    AS MaxTemp
+            , MAX(temperature_from_humidity)    AS MinTemp
+            , MAX(humidity)                     AS MaxHumidity
+            , MIN (humidity)                    AS MinHumidity
+FROM        ext.raspdataexternaltableAll
+GROUP BY    CAST(timestamp AS DATE)
+
+
